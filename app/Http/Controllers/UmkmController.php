@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User; // UMKM User Model
+use App\Models\User;
 use App\Models\Investor;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
@@ -10,51 +10,40 @@ use Carbon\Carbon;
 
 class UmkmController extends Controller
 {
-    /**
-     * Display a listing of UMKM profiles that are "investable" and "complete".
-     * "Complete" means umkm_name and contact are filled.
-     */
     public function index(Request $request)
     {
-        // Ensure only authenticated investors can access this
-        // This middleware should be applied in routes/api.php: ['auth:sanctum', 'ability:role:investor']
         if (! ($request->user() instanceof Investor) ) {
              return response()->json(['message' => 'Unauthorized access.'], 403);
         }
 
-        $umkms = User::where('is_investable', true) // <<< CRUCIAL FILTER ADDED
+        $umkms = User::where('is_investable', true)
                      ->whereNotNull('umkm_name')
                      ->where('umkm_name', '!=', '')
-                     ->whereNotNull('contact') // Using standardized 'contact' field
+                     ->whereNotNull('contact')
                      ->where('contact', '!=', '')
-                     ->select('id', 'name', 'email', 'umkm_name', 'contact', 'is_investable') // Select relevant fields
+                     ->select('id', 'name', 'email', 'umkm_name', 'contact', 'is_investable', 'umkm_description', 'umkm_profile_image_path')
                      ->orderBy('umkm_name')
                      ->get();
 
         return response()->json($umkms);
     }
 
-    /**
-     * Display the specified UMKM profile along with their financial summary (transactions).
-     */
-    public function show(Request $request, $umkmId) // umkmId is the ID of the User (UMKM)
+    public function show(Request $request, $umkmId)
     {
          if (! ($request->user() instanceof Investor) ) {
              return response()->json(['message' => 'Unauthorized access.'], 403);
         }
 
         $umkm = User::with(['transactions' => function ($query) {
-                        // For financial summary, usually only 'Done' transactions are considered.
-                        $query->where('status', 'Done')->orderBy('user_sequence_id', 'desc'); // Or 'date'
+                        $query->where('status', 'Done')->orderBy('user_sequence_id', 'desc');
                     }])
-                    ->select('id', 'name', 'email', 'umkm_name', 'contact', 'is_investable')
+                    ->select('id', 'name', 'email', 'umkm_name', 'contact', 'is_investable', 'umkm_description', 'umkm_profile_image_path')
                     ->find($umkmId);
 
         if (!$umkm) {
             return response()->json(['message' => 'UMKM not found'], 404);
         }
 
-        // Ensure the profile is "complete" and investable before showing detailed financials
         if (empty($umkm->umkm_name) || empty($umkm->contact) || !$umkm->is_investable) {
             return response()->json(['message' => 'This UMKM profile is not complete or not open for investment viewing.'], 403);
         }
@@ -76,11 +65,13 @@ class UmkmController extends Controller
         return response()->json([
             'umkm' => [
                 'id' => $umkm->id,
-                'name' => $umkm->name, // Owner's name
+                'name' => $umkm->name,
                 'email' => $umkm->email,
                 'umkm_name' => $umkm->umkm_name,
-                'contact' => $umkm->contact, // Using standardized 'contact' field
+                'contact' => $umkm->contact,
                 'is_investable' => $umkm->is_investable,
+                'umkm_description' => $umkm->umkm_description,
+                'umkm_profile_image_url' => $umkm->umkm_profile_image_url,
             ],
             'financial_summary' => [
                 'total_income' => (float) $totalIncome,

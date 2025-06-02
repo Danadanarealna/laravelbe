@@ -1,0 +1,57 @@
+@extends('admin.layouts.app')
+
+@section('title', 'UMKM Users')
+@section('page-title', 'Manage UMKM Users')
+
+@section('content')
+    <div style="margin-bottom: 20px;">
+        <a href="{{ route('admin.users.create') }}" class="btn btn-primary">Add New UMKM User</a>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>UMKM Name</th>
+                <th>Contact</th>
+                <th>Investable</th>
+                <th>Admin</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($users as $user)
+                <tr>
+                    <td>{{ $user->id }}</td>
+                    <td>{{ $user->name }}</td>
+                    <td>{{ $user->email }}</td>
+                    <td>{{ $user->umkm_name ?? 'N/A' }}</td>
+                    <td>{{ $user->contact ?? 'N/A' }}</td>
+                    <td>{{ $user->is_investable ? 'Yes' : 'No' }}</td>
+                    <td>{{ $user->is_admin ? 'Yes' : 'No' }}</td>
+                    <td class="action-buttons">
+                        <a href="{{ route('admin.users.show', $user) }}" class="btn btn-info">View</a>
+                        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-warning">Edit</a>
+                        <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="8" style="text-align: center;">No UMKM users found.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    @if($users->hasPages())
+        <div class="pagination">
+            {{ $users->links() }}
+        </div>
+    @endif
+@endsection

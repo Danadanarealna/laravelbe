@@ -5,9 +5,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\InvestorAuthController;
 use App\Http\Controllers\TransactionController;
-use App\Http\Controllers\UmkmController; 
+use App\Http\Controllers\UmkmController;
 use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\DebtController;
 
 Route::post('/register', [AuthController::class, 'register'])->name('umkm.register');
 Route::post('/login', [AuthController::class, 'login'])->name('umkm.login');
@@ -16,16 +17,16 @@ Route::post('/investor/register', [InvestorAuthController::class, 'register'])->
 Route::post('/investor/login', [InvestorAuthController::class, 'login'])->name('investor.login');
 
 
-Route::middleware(['auth:sanctum', 'ability:role:umkm'])->group(function () { 
+Route::middleware(['auth:sanctum', 'ability:role:umkm'])->group(function () {
     Route::get('/user', [AuthController::class, 'user'])->name('umkm.auth.user');
     Route::post('/logout', [AuthController::class, 'logout'])->name('umkm.auth.logout');
-    Route::put('/profile', [AuthController::class, 'updateProfile'])->name('umkm.auth.profile.update');
+    
+    Route::post('/profile', [AuthController::class, 'updateProfile'])->name('umkm.auth.profile.update');
 
-    Route::get('/transactions', [TransactionController::class, 'index'])->name('umkm.transactions.index');
-    Route::post('/transactions', [TransactionController::class, 'store'])->name('umkm.transactions.store');
-    Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('umkm.transactions.show');
-    Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('umkm.transactions.update');
-    Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('umkm.transactions.destroy');
+    Route::apiResource('transactions', TransactionController::class)->names('umkm.transactions');
+    Route::apiResource('debts', DebtController::class)->names('umkm.debts');
+    Route::patch('/debts/{debt}/verify', [DebtController::class, 'verifyAndRecordIncome'])->name('umkm.debts.verify');
+
 
     Route::get('/appointments/umkm', [AppointmentController::class, 'indexForUmkm'])->name('umkm.appointments.index');
     Route::put('/appointments/umkm/{appointment}/status', [AppointmentController::class, 'updateStatusForUmkm'])->name('umkm.appointments.updateStatus');
@@ -37,7 +38,7 @@ Route::middleware(['auth:sanctum', 'ability:role:investor'])->prefix('investor')
 
 
     Route::get('/umkms', [UmkmController::class, 'index'])->name('investor.umkms.list');
-    Route::get('/umkms/{umkmId}', [UmkmController::class, 'show'])->name('investor.umkms.show'); 
+    Route::get('/umkms/{umkmId}', [UmkmController::class, 'show'])->name('investor.umkms.show');
 
     Route::post('/investments', [InvestmentController::class, 'store'])->name('investor.investments.store');
     Route::get('/investments', [InvestmentController::class, 'index'])->name('investor.investments.index');
@@ -45,6 +46,5 @@ Route::middleware(['auth:sanctum', 'ability:role:investor'])->prefix('investor')
 
     Route::post('/appointments', [AppointmentController::class, 'store'])->name('investor.appointments.store');
     Route::get('/appointments', [AppointmentController::class, 'indexForInvestor'])->name('investor.appointments.index');
-
     Route::put('/appointments/{appointment}/status', [AppointmentController::class, 'updateStatusForInvestor'])->name('investor.appointments.updateStatus');
 });

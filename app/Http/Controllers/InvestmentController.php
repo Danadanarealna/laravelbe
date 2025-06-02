@@ -3,19 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Investment;
-use App\Models\User; 
-use App\Models\Investor; 
+use App\Models\User;
+use App\Models\Investor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon; 
+use Carbon\Carbon;
 
 class InvestmentController extends Controller
 {
     public function store(Request $request)
     {
         try {
-            /** @var Investor $investor */
             $investor = Auth::guard('sanctum')->user();
 
             if (!($investor instanceof Investor)) {
@@ -25,7 +24,6 @@ class InvestmentController extends Controller
             $validated = $request->validate([
                 'umkm_id' => 'required|exists:users,id',
                 'amount' => 'required|numeric|min:0.01',
-                // 'investment_date' => 'nullable|date_format:Y-m-d H:i:s',
             ]);
 
             $umkm = User::find($validated['umkm_id']);
@@ -37,7 +35,7 @@ class InvestmentController extends Controller
                 'investor_id' => $investor->id,
                 'umkm_id' => $validated['umkm_id'],
                 'amount' => $validated['amount'],
-                'status' => 'pending', // Default status
+                'status' => 'pending',
             ];
             
             $investmentData['investment_date'] = $request->input('investment_date', now());
@@ -47,7 +45,7 @@ class InvestmentController extends Controller
 
             return response()->json([
                 'message' => 'Investment initiated successfully!',
-                'investment' => $investment->load('umkm:id,umkm_name,contact')
+                'investment' => $investment->load('umkm:id,umkm_name,contact,umkm_profile_image_path,umkm_description')
             ], 201);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -60,15 +58,14 @@ class InvestmentController extends Controller
 
     public function index(Request $request)
     {
-        /** @var Investor $investor */
         $investor = Auth::guard('sanctum')->user();
         if (!($investor instanceof Investor)) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
         $investments = $investor->investments()
-                                ->with('umkm:id,umkm_name,contact')
-                                ->orderBy('investment_date', 'desc') // Order by investment_date
+                                ->with('umkm:id,umkm_name,contact,umkm_profile_image_path,umkm_description')
+                                ->orderBy('investment_date', 'desc')
                                 ->orderBy('created_at', 'desc')
                                 ->get();
 
@@ -78,7 +75,6 @@ class InvestmentController extends Controller
     public function confirmInvestment(Request $request, Investment $investment)
     {
         try {
-            /** @var Investor $investor */
             $investor = Auth::guard('sanctum')->user();
 
             if (!($investor instanceof Investor) || $investment->investor_id !== $investor->id) {
@@ -86,14 +82,14 @@ class InvestmentController extends Controller
             }
 
             if ($investment->status !== 'pending') {
-                return response()->json(['message' => 'This investment is not pending and cannot be confirmed.'], 422); 
+                return response()->json(['message' => 'This investment is not pending and cannot be confirmed.'], 422);
             }
 
-            $investment->status = 'active'; 
+            $investment->status = 'active';
             $investment->save();
             return response()->json([
                 'message' => 'Investment confirmed successfully!',
-                'investment' => $investment->fresh()->load('umkm:id,umkm_name,contact') 
+                'investment' => $investment->fresh()->load('umkm:id,umkm_name,contact,umkm_profile_image_path,umkm_description')
             ], 200);
 
         } catch (\Exception $e) {

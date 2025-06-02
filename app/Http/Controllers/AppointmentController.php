@@ -16,9 +16,7 @@ class AppointmentController extends Controller
     public function store(Request $request)
     {
         try {
-            /** @var Investor $investor */
             $investor = Auth::guard('sanctum')->user();
-
 
             if (!($investor instanceof Investor)) {
                 return response()->json(['message' => 'Unauthorized. Only investors can request appointments.'], 403);
@@ -39,19 +37,17 @@ class AppointmentController extends Controller
             $appointmentData = [
                 'investor_id' => $investor->id,
                 'umkm_id' => $validated['umkm_id'],
-                // 'investment_id' => $validated['investment_id'] ?? null, // Include if validated
                 'appointment_details' => $validated['appointment_details'],
-                'status' => 'requested', // Default status for a new request
+                'status' => 'requested',
                 'contact_method' => $validated['contact_method'],
                 'contact_payload' => $validated['contact_payload'],
             ];
-
 
             $appointment = Appointment::create($appointmentData);
 
             return response()->json([
                 'message' => 'Appointment requested successfully!',
-                'appointment' => $appointment->load(['umkm:id,umkm_name,contact', /* 'investment:id,amount' */])
+                'appointment' => $appointment->load(['umkm:id,umkm_name,contact'])
             ], 201);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -64,7 +60,6 @@ class AppointmentController extends Controller
 
     public function indexForInvestor(Request $request)
     {
-        /** @var Investor $investor */
         $investor = Auth::guard('sanctum')->user();
         if (!($investor instanceof Investor)) {
             return response()->json(['message' => 'Unauthorized.'], 403);
@@ -79,7 +74,6 @@ class AppointmentController extends Controller
 
     public function indexForUmkm(Request $request)
     {
-        /** @var User $umkm */
         $umkm = Auth::guard('sanctum')->user();
         if (!($umkm instanceof User)) {
             return response()->json(['message' => 'Unauthorized.'], 403);
@@ -94,7 +88,6 @@ class AppointmentController extends Controller
 
     public function updateStatusForUmkm(Request $request, Appointment $appointment)
     {
-        /** @var User $umkm */
         $umkm = Auth::guard('sanctum')->user();
 
         if (!($umkm instanceof User) || $appointment->umkm_id !== $umkm->id) {
@@ -121,7 +114,6 @@ class AppointmentController extends Controller
 
     public function updateStatusForInvestor(Request $request, Appointment $appointment)
     {
-        /** @var Investor $investor */
         $investor = Auth::guard('sanctum')->user();
 
         if (!($investor instanceof Investor) || $appointment->investor_id !== $investor->id) {
