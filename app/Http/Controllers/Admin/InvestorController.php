@@ -86,7 +86,6 @@ class InvestorController extends Controller
             unset($validatedData['password']);
         }
 
-        // Handle profile image upload
         if ($request->hasFile('profile_image')) {
             // Delete old image if exists
             if ($investor->profile_image_path && Storage::disk('public')->exists($investor->profile_image_path)) {
