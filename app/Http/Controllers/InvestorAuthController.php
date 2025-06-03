@@ -6,7 +6,10 @@ use App\Models\Investor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class InvestorAuthController extends Controller
 {
@@ -71,8 +74,73 @@ class InvestorAuthController extends Controller
     public function user(Request $request)
     {
         if ($request->user() instanceof Investor) {
-            return response()->json($request->user()->only(['id', 'name', 'email']));
+            return response()->json($request->user());
         }
         return response()->json(['message' => 'Not an authenticated investor.'], 403);
+    }
+
+    /**
+     * Update investor profile including profile image
+     */
+    public function updateProfile(Request $request)
+    {
+        $investor = $request->user();
+
+        if (!$investor instanceof Investor) {
+            return response()->json(['message' => 'Not an authenticated investor.'], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|string|email|max:255|unique:investors,email,' . $investor->id,
+            'password' => 'sometimes|nullable|string|min:8|confirmed',
+            'profile_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        // Handle profile image upload
+        if ($request->hasFile('profile_image')) {
+            // Delete old image if exists
+            if ($investor->profile_image_path && Storage::disk('public')->exists($investor->profile_image_path)) {
+                Storage::disk('public')->delete($investor->profile_image_path);
+            }
+
+            // Store new image
+            $image = $request->file('profile_image');
+            $imageName = Str::random(40) . '.' . $image->getClientOriginalExtension();
+            $imagePath = "investors/{$investor->id}/profile_images/{$imageName}";
+            
+            // Store the image
+            Storage::disk('public')->putFileAs(
+                "investors/{$investor->id}/profile_images",
+                $image,
+                $imageName
+            );
+
+            $investor->profile_image_path = $imagePath;
+        }
+
+        // Update other fields
+        if ($request->has('name')) {
+            $investor->name = $request->name;
+        }
+
+        if ($request->has('email')) {
+            $investor->email = $request->email;
+        }
+
+        if ($request->has('password') && $request->password) {
+            $investor->password = Hash::make($request->password);
+        }
+
+        $investor->save();
+
+        return response()->json([
+            'message' => 'Profile updated successfully',
+            'investor' => $investor,
+        ]);
     }
 }

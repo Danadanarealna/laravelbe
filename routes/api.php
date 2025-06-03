@@ -20,7 +20,6 @@ Route::options('/images/{path}', [ImageController::class, 'options'])->where('pa
 Route::post('/investor/register', [InvestorAuthController::class, 'register'])->name('investor.register');
 Route::post('/investor/login', [InvestorAuthController::class, 'login'])->name('investor.login');
 
-
 Route::middleware(['auth:sanctum', 'ability:role:umkm'])->group(function () {
     Route::get('/user', [AuthController::class, 'user'])->name('umkm.auth.user');
     Route::post('/logout', [AuthController::class, 'logout'])->name('umkm.auth.logout');
@@ -31,7 +30,6 @@ Route::middleware(['auth:sanctum', 'ability:role:umkm'])->group(function () {
     Route::apiResource('debts', DebtController::class)->names('umkm.debts');
     Route::patch('/debts/{debt}/verify', [DebtController::class, 'verifyAndRecordIncome'])->name('umkm.debts.verify');
 
-
     Route::get('/appointments/umkm', [AppointmentController::class, 'indexForUmkm'])->name('umkm.appointments.index');
     Route::put('/appointments/umkm/{appointment}/status', [AppointmentController::class, 'updateStatusForUmkm'])->name('umkm.appointments.updateStatus');
 });
@@ -39,7 +37,9 @@ Route::middleware(['auth:sanctum', 'ability:role:umkm'])->group(function () {
 Route::middleware(['auth:sanctum', 'ability:role:investor'])->prefix('investor')->group(function () {
     Route::get('/user', [InvestorAuthController::class, 'user'])->name('investor.auth.user');
     Route::post('/logout', [InvestorAuthController::class, 'logout'])->name('investor.auth.logout');
-
+    
+    // Add investor profile update route
+    Route::post('/profile', [InvestorAuthController::class, 'updateProfile'])->name('investor.auth.profile.update');
 
     Route::get('/umkms', [UmkmController::class, 'index'])->name('investor.umkms.list');
     Route::get('/umkms/{umkmId}', [UmkmController::class, 'show'])->name('investor.umkms.show');
