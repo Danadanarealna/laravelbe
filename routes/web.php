@@ -43,3 +43,39 @@ Route::prefix('admin')->name('admin.')->group(function () {
 Route::get('admin', function() {
     return redirect()->route('admin.login.form');
 })->middleware('guest');
+
+
+Route::get('/storage/{path}', function ($path) {
+    // Check if file exists
+    if (!Storage::disk('public')->exists($path)) {
+        abort(404);
+    }
+    
+    // Get file contents and mime type
+    $file = Storage::disk('public')->get($path);
+    $mimeType = Storage::disk('public')->mimeType($path);
+    
+    // Create response with CORS headers
+    $response = Response::make($file, 200, [
+        'Content-Type' => $mimeType,
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+    
+    // Add CORS headers
+    $response->header('Access-Control-Allow-Origin', '*');
+    $response->header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    $response->header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Authorization, X-Requested-With');
+    $response->header('Access-Control-Allow-Credentials', 'true');
+    
+    return $response;
+})->where('path', '.*')->name('storage.public');
+
+// Handle OPTIONS requests for CORS preflight
+Route::options('/storage/{path}', function () {
+    return Response::make('', 200, [
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods' => 'GET, HEAD, OPTIONS',
+        'Access-Control-Allow-Headers' => 'Origin, Content-Type, Accept, Authorization, X-Requested-With',
+        'Access-Control-Allow-Credentials' => 'true',
+    ]);
+})->where('path', '.*');

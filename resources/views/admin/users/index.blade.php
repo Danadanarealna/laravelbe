@@ -12,6 +12,7 @@
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Image</th>
                 <th>Name</th>
                 <th>Email</th>
                 <th>UMKM Name</th>
@@ -25,6 +26,15 @@
             @forelse ($users as $user)
                 <tr>
                     <td>{{ $user->id }}</td>
+                    <td>
+                        @if($user->umkm_profile_image_url)
+                            <img src="{{ $user->umkm_profile_image_url }}" alt="{{ $user->umkm_name ?? $user->name }}" width="50" height="50" style="border-radius: 50%; object-fit: cover;">
+                        @else
+                            <div style="width: 50px; height: 50px; background-color: #e9ecef; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #495057;">
+                                {{ strtoupper(substr($user->name, 0, 1)) }}
+                            </div>
+                        @endif
+                    </td>
                     <td>{{ $user->name }}</td>
                     <td>{{ $user->email }}</td>
                     <td>{{ $user->umkm_name ?? 'N/A' }}</td>
@@ -43,7 +53,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" style="text-align: center;">No UMKM users found.</td>
+                    <td colspan="9" style="text-align: center;">No UMKM users found.</td>
                 </tr>
             @endforelse
         </tbody>

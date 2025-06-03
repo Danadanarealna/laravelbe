@@ -26,6 +26,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
             'auth.sanctum' => \Laravel\Sanctum\Http\Middleware\Authenticate::class,
             'admin' => \App\Http\Middleware\IsAdmin::class,
+            'storage.cors' => \App\Http\Middleware\StorageCorsMiddleware::class,
+        ]);
+
+        // Apply CORS to web routes as well
+        $middleware->web(append: [
+            \Illuminate\Http\Middleware\HandleCors::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

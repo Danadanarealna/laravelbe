@@ -9,9 +9,13 @@ use App\Http\Controllers\UmkmController;
 use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\DebtController;
+use App\Http\Controllers\ImageController;
 
 Route::post('/register', [AuthController::class, 'register'])->name('umkm.register');
 Route::post('/login', [AuthController::class, 'login'])->name('umkm.login');
+
+Route::get('/images/{path}', [ImageController::class, 'show'])->where('path', '.*');
+Route::options('/images/{path}', [ImageController::class, 'options'])->where('path', '.*');
 
 Route::post('/investor/register', [InvestorAuthController::class, 'register'])->name('investor.register');
 Route::post('/investor/login', [InvestorAuthController::class, 'login'])->name('investor.login');
