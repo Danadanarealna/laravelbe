@@ -46,8 +46,8 @@
         <div class="form-group">
             <label for="umkm_profile_image_path">UMKM Profile Image (leave blank to keep current)</label>
             <input type="file" name="umkm_profile_image_path" id="umkm_profile_image_path">
-            @if($user->umkm_profile_image_url)
-                <img src="{{ $user->umkm_profile_image_url }}" alt="{{ $user->umkm_name }}" width="100" style="margin-top:10px;">
+            @if($user->umkm_profile_image_path)
+                <img src="{{ $user->getAdminImageUrl() }}" alt="{{ $user->umkm_name }}" width="100" style="margin-top:10px;">
             @endif
         </div>
 

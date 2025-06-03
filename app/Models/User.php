@@ -106,4 +106,13 @@ class User extends Authenticatable
         }
         return null;
     }
+
+    public function getAdminImageUrl(): ?string
+{
+    if (!$this->umkm_profile_image_path) {
+        return null;
+    }
+    $cleanPath = ltrim($this->umkm_profile_image_path, '/');
+    return url('/api/images/' . $cleanPath);
+}
 }

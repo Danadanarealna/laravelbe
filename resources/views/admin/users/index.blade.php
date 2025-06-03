@@ -27,8 +27,8 @@
                 <tr>
                     <td>{{ $user->id }}</td>
                     <td>
-                        @if($user->umkm_profile_image_url)
-                            <img src="{{ $user->umkm_profile_image_url }}" alt="{{ $user->umkm_name ?? $user->name }}" width="50" height="50" style="border-radius: 50%; object-fit: cover;">
+                        @if($user->umkm_profile_image_path)
+                            <img src="{{ $user->getAdminImageUrl() }}" alt="{{ $user->umkm_name ?? $user->name }}" width="50" height="50" style="border-radius: 50%; object-fit: cover;">
                         @else
                             <div style="width: 50px; height: 50px; background-color: #e9ecef; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #495057;">
                                 {{ strtoupper(substr($user->name, 0, 1)) }}
