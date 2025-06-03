@@ -42,7 +42,6 @@
                     <td>{{ $user->is_investable ? 'Yes' : 'No' }}</td>
                     <td>{{ $user->is_admin ? 'Yes' : 'No' }}</td>
                     <td class="action-buttons">
-                        <a href="{{ route('admin.users.show', $user) }}" class="btn btn-info">View</a>
                         <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-warning">Edit</a>
                         <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this user?');">
                             @csrf
