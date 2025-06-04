@@ -24,7 +24,6 @@ Route::middleware(['auth:sanctum', 'ability:role:umkm'])->group(function () {
     Route::get('/user', [AuthController::class, 'user'])->name('umkm.auth.user');
     Route::post('/logout', [AuthController::class, 'logout'])->name('umkm.auth.logout');
     
-    // Add GET route for retrieving profile
     Route::get('/profile', [AuthController::class, 'getProfile'])->name('umkm.auth.profile.get');
     Route::post('/profile', [AuthController::class, 'updateProfile'])->name('umkm.auth.profile.update');
 
@@ -40,7 +39,6 @@ Route::middleware(['auth:sanctum', 'ability:role:investor'])->prefix('investor')
     Route::get('/user', [InvestorAuthController::class, 'user'])->name('investor.auth.user');
     Route::post('/logout', [InvestorAuthController::class, 'logout'])->name('investor.auth.logout');
     
-    // Add GET route for investor profile and update route
     Route::get('/profile', [InvestorAuthController::class, 'getProfile'])->name('investor.auth.profile.get');
     Route::post('/profile', [InvestorAuthController::class, 'updateProfile'])->name('investor.auth.profile.update');
 

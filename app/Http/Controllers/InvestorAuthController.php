@@ -138,9 +138,17 @@ class InvestorAuthController extends Controller
 
         $investor->save();
 
+        // FIXED: Prepare response data with proper image URL
+        $investorData = $investor->toArray();
+        
+        // Use the API image URL instead of the storage URL for better CORS handling
+        if ($investor->hasProfileImage()) {
+            $investorData['profile_image_url'] = $investor->getApiImageUrl();
+        }
+
         return response()->json([
             'message' => 'Profile updated successfully',
-            'investor' => $investor,
+            'investor' => $investorData,
         ]);
     }
 }
