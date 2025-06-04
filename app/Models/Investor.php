@@ -21,7 +21,7 @@ class Investor extends Authenticatable
         'name',
         'email',
         'password',
-        'profile_image_path', // Add this field
+        'profile_image_path', // Ensure this field is in your database table
     ];
 
     /**
@@ -39,7 +39,7 @@ class Investor extends Authenticatable
      *
      * @var array
      */
-    protected $appends = ['profile_image_url'];
+    protected $appends = ['profile_image_url']; // This will call getProfileImageUrlAttribute
 
     /**
      * Get the attributes that should be cast.
@@ -67,31 +67,33 @@ class Investor extends Authenticatable
     }
 
     /**
-     * Get the profile image URL (for API/Flutter app).
+     * Get the profile image URL, ensuring it uses the /api/images route.
+     * This accessor is automatically called due to $appends.
      *
      * @return string|null
      */
     public function getProfileImageUrlAttribute(): ?string
     {
-        if ($this->profile_image_path) {
-            return Storage::disk('public')->url($this->profile_image_path);
+        if (!$this->profile_image_path) {
+            return null;
         }
-        return null;
+
+        // Ensure the path doesn't have leading slashes for URL generation
+        $cleanPath = ltrim($this->profile_image_path, '/');
+        
+        // Construct the URL using the /api/images/ route
+        return url('/api/images/' . $cleanPath);
     }
 
     /**
-     * Get the API URL for the profile image.
+     * Get the API URL for the profile image (alternative explicit method if needed).
+     * This is essentially the same as getProfileImageUrlAttribute now.
      *
      * @return string|null
      */
     public function getApiImageUrl(): ?string
     {
-        if (!$this->profile_image_path) {
-            return null;
-        }
-
-        $cleanPath = ltrim($this->profile_image_path, '/');
-        return url('/api/images/' . $cleanPath);
+        return $this->getProfileImageUrlAttribute(); // Delegate to the accessor
     }
 
     /**
@@ -111,6 +113,9 @@ class Investor extends Authenticatable
      */
     public function getInitials(): string
     {
+        if (empty($this->name)) {
+            return 'I'; // Default initial if name is empty
+        }
         return strtoupper(substr($this->name, 0, 1));
     }
 }

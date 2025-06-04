@@ -28,12 +28,15 @@ class InvestorAuthController extends Controller
         ]);
 
         $token = $investor->createToken('auth_token_investor', ['role:investor'])->plainTextToken;
+        
+        // Ensure profile_image_url is included (it will be null for new registration)
+        $investorData = $investor->toArray(); // This will include appended attributes like profile_image_url
 
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user_type' => 'investor',
-            'user' => $investor->only(['id', 'name', 'email']),
+            'user' => $investorData, // Send the full investor data with appended URL
         ], 201);
     }
 
@@ -54,11 +57,14 @@ class InvestorAuthController extends Controller
 
         $token = $investor->createToken('auth_token_investor', ['role:investor'])->plainTextToken;
 
+        // Convert investor model to array to ensure appended attributes are included
+        $investorData = $investor->toArray(); 
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user_type' => 'investor',
-            'user' => $investor->only(['id', 'name', 'email']),
+            'user' => $investorData, // Send the full investor data with appended URL
         ]);
     }
 
@@ -73,8 +79,10 @@ class InvestorAuthController extends Controller
 
     public function user(Request $request)
     {
-        if ($request->user() instanceof Investor) {
-            return response()->json($request->user());
+        $user = $request->user();
+        if ($user instanceof Investor) {
+            // When returning the user, toArray() will ensure $appends are processed.
+            return response()->json($user->toArray()); 
         }
         return response()->json(['message' => 'Not an authenticated investor.'], 403);
     }
@@ -94,7 +102,7 @@ class InvestorAuthController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|string|email|max:255|unique:investors,email,' . $investor->id,
             'password' => 'sometimes|nullable|string|min:8|confirmed',
-            'profile_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // 2MB max
+            'profile_image' => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // Added webp, 2MB max
         ]);
 
         if ($validator->fails()) {
@@ -108,43 +116,40 @@ class InvestorAuthController extends Controller
                 Storage::disk('public')->delete($investor->profile_image_path);
             }
 
-            // Store new image
             $image = $request->file('profile_image');
             $imageName = Str::random(40) . '.' . $image->getClientOriginalExtension();
-            $imagePath = "investors/{$investor->id}/profile_images/{$imageName}";
+            // Ensure the path is consistent, e.g., "investors/1/profile_images/random.jpg"
+            $imagePath = "investors/{$investor->id}/profile_images/{$imageName}"; 
             
-            // Store the image
-            Storage::disk('public')->putFileAs(
-                "investors/{$investor->id}/profile_images",
-                $image,
-                $imageName
-            );
+            Storage::disk('public')->put($imagePath, file_get_contents($image));
 
             $investor->profile_image_path = $imagePath;
+        } elseif ($request->exists('profile_image') && is_null($request->input('profile_image'))) {
+            // If 'profile_image' is explicitly sent as null, consider it a request to remove the image.
+            if ($investor->profile_image_path && Storage::disk('public')->exists($investor->profile_image_path)) {
+                Storage::disk('public')->delete($investor->profile_image_path);
+            }
+            $investor->profile_image_path = null;
         }
 
-        // Update other fields
-        if ($request->has('name')) {
+
+        if ($request->filled('name')) {
             $investor->name = $request->name;
         }
 
-        if ($request->has('email')) {
+        if ($request->filled('email') && $request->email !== $investor->email) {
             $investor->email = $request->email;
         }
 
-        if ($request->has('password') && $request->password) {
+        if ($request->filled('password')) {
             $investor->password = Hash::make($request->password);
         }
 
         $investor->save();
-
-        // FIXED: Prepare response data with proper image URL
-        $investorData = $investor->toArray();
         
-        // Use the API image URL instead of the storage URL for better CORS handling
-        if ($investor->hasProfileImage()) {
-            $investorData['profile_image_url'] = $investor->getApiImageUrl();
-        }
+        // Refresh model to get latest data including any changes by mutators/accessors
+        $investor->refresh(); 
+        $investorData = $investor->toArray(); // This will include the appended profile_image_url
 
         return response()->json([
             'message' => 'Profile updated successfully',
