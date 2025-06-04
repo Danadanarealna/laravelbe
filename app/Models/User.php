@@ -27,7 +27,7 @@ class User extends Authenticatable
         'is_investable',
         'umkm_description',
         'umkm_profile_image_path',
-        'is_admin', // Added is_admin here
+        'is_admin',
     ];
 
     /**
@@ -58,7 +58,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_investable' => 'boolean',
-            'is_admin' => 'boolean', // Added is_admin cast here
+            'is_admin' => 'boolean',
         ];
     }
 
@@ -95,24 +95,38 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the full URL for the UMKM profile image.
+     * Get the full URL for the UMKM profile image (using ImageController route).
      *
      * @return string|null
      */
     public function getUmkmProfileImageUrlAttribute(): ?string
     {
-        if ($this->umkm_profile_image_path) {
-            return Storage::disk('public')->url($this->umkm_profile_image_path);
+        if (empty($this->umkm_profile_image_path)) {
+            return null;
         }
-        return null;
+
+        // Return the URL that goes through our ImageController
+        $cleanPath = ltrim($this->umkm_profile_image_path, '/');
+        return url('/api/images/' . $cleanPath);
     }
 
-    public function getAdminImageUrl(): ?string
-{
-    if (!$this->umkm_profile_image_path) {
-        return null;
+    /**
+     * Check if UMKM has a profile image.
+     *
+     * @return bool
+     */
+    public function hasUmkmProfileImage(): bool
+    {
+        return !empty($this->umkm_profile_image_path);
     }
-    $cleanPath = ltrim($this->umkm_profile_image_path, '/');
-    return url('/api/images/' . $cleanPath);
-}
+
+    /**
+     * Get UMKM's initials for avatar fallback.
+     *
+     * @return string
+     */
+    public function getUmkmInitials(): string
+    {
+        return strtoupper(substr($this->name, 0, 1));
+    }
 }
