@@ -28,9 +28,9 @@
                     <td>{{ $user->id }}</td>
                     <td>
                         @if($user->hasUmkmProfileImage() && $user->umkm_profile_image_url)
-                            <img src="{{ $user->umkm_profile_image_url }}" alt="{{ $user->umkm_name ?? $user->name }}" width="50" height="50" style="border-radius: 50%; object-fit: cover;">
+                            <img src="{{ $user->umkm_profile_image_url }}" alt="{{ $user->umkm_name ?? $user->name }}" width="50" height="50" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #cccccc; box-sizing: border-box;">
                         @else
-                            <div style="width: 50px; height: 50px; background-color: #e9ecef; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #495057;">
+                            <div style="width: 50px; height: 50px; background-color: #e9ecef; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #495057; border: 2px solid #cccccc; box-sizing: border-box;">
                                 {{ $user->getUmkmInitials() }}
                             </div>
                         @endif
